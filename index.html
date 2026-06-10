@@ -1221,7 +1221,6 @@
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('bold')"><b>B</b></button>
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('italic')"><i>I</i></button>
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('underline')"><u>U</u></button>
-                                <button type="button" class="editor-btn" onclick="applyRichFormat('strikeThrough')"><s>S</s></button>
                             </div>
                             <div id="infoContent" class="rich-editor-box" contenteditable="true" placeholder="학생들에게 전달할 상세 교육 정보를 작성하세요."></div>
                         </div>
@@ -2087,7 +2086,6 @@
                         <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('bold')"><b>B</b></button>
                         <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('italic')"><i>I</i></button>
                         <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('underline')"><u>U</u></button>
-                        <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('strikeThrough')"><s>S</s></button>
                     </div>
                     <div id="edit_input_${key}" class="rich-editor-box" contenteditable="true" style="min-height:70px; font-size:13px; border-top-left-radius:0; border-top-right-radius:0;">${sanitizeHtml(currentHtmlText)}</div>
                 </div>
@@ -2144,7 +2142,7 @@
 
         let commentCardsHtml = '';
         if (commentList.length === 0) {
-            commentCardsHtml = `<div style="font-size:12px; color:#708271; padding: 5px 0;">작성된 질문이나 댓글이 없습니다. 궁금한 점을 남겨보세요!</div>`;
+            commentCardsHtml = `<div style="font-size:12px; color:#708271; padding: 5px 0;">타인을 비방하거나 악성 댓글(악플)을 다는 행위는 정보통신망법상 명예훼손죄로 처벌받을 수 있는 명백한 범죄입니다.</div>`;
         } else {
             commentCardsHtml = commentList.map(comment => {
                 const isTeacher = comment.authorRole === 'teacher';
@@ -2209,7 +2207,6 @@
                             <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('bold')"><b>B</b></button>
                             <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('italic')"><i>I</i></button>
                             <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('underline')"><u>U</u></button>
-                            <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('strikeThrough')"><s>S</s></button>
                         </div>
                         <div id="${viewTypePrefix}_input_cm_${feed.id}" class="rich-editor-box" contenteditable="true" style="min-height:65px; font-size:13px; border-top-left-radius:0; border-top-right-radius:0;" placeholder="${currentUserRole === 'teacher' ? '학생들에게 피드백이나 서식 있는 답변을 남겨주세요.' : '안내 내용 중 궁금한 점을 서식 도구를 활용해 질문해보세요.'}"></div>
                     </div>
