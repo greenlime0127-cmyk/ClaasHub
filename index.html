@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassHub - 교육자 플랫폼</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f4; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            color: #132A13; 
+        }
+
+        /* ------------------ 페이드 애니메이션 스타일 ------------------ */
+        .page {
+            width: 100%;
+            max-width: 540px; 
+            text-align: center;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 8px 24px rgba(19, 42, 19, 0.05);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .page.wide-page {
+            max-width: 1280px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ------------------ 공통 타이틀 & 인풋 스타일 ------------------ */
+        .title-area {
+            margin-bottom: 40px;
+        }
+
+        .title-area h1 {
+            color: #132A13; 
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #31572C; 
+            margin-bottom: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input {
+            flex: 1;
+        }
+
+        .row-btn {
+            width: 100px;
+            background-color: #4F772D; 
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .row-btn:hover {
+            background-color: #31572C;
+        }
+
+        input, select {
+            width: 100%;
+            height: 55px;
+            background-color: #f7f9f6;
+            border: 1px solid #e1e6e1;
+            border-radius: 8px;
+            padding: 0 20px;
+            font-size: 16px;
+            color: #132A13;
+            outline: none;
+        }
+
+        /* ------------------ 서식 편집 툴바 및 입력창 ------------------ */
+        .editor-toolbar {
+            display: flex;
+            gap: 4px;
+            background-color: #f1f3f1;
+            border: 1px solid #ced4da;
+            border-bottom: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 6px;
+        }
+
+        .editor-btn {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #31572C;
+            transition: all 0.15s;
+        }
+
+        .editor-btn:hover {
+            background-color: #e2e7e2;
+            color: #132A13;
+        }
+
+        .rich-editor-box {
+            width: 100%;
+            min-height: 120px;
+            max-height: 300px;
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            padding: 15px 20px;
+            font-size: 16px;
+            color: #132A13;
+            outline: none;
+            overflow-y: auto;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        
+        .rich-editor-box[placeholder]:empty:before {
+            content: attr(placeholder);
+            color: #adb5bd;
+            font-style: normal;
+        }
+
+        .msg {
+            font-size: 13px;
+            margin-top: 6px;
+            font-weight: 600;
+            display: none;
+        }
+        .msg.error { color: #b3261e; display: block; }
+        .msg.success { color: #31572C; display: block; }
+
+        .main-btn {
+            width: 100%;
+            height: 55px;
+            background-color: #31572C; 
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            transition: background-color 0.2s;
+        }
+
+        .main-btn:hover {
+            background-color: #132A13;
+        }
+
+        .main-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .footer-link {
+            font-size: 14px;
+            color: #708271;
+            font-weight: 500;
+        }
+
+        .link-text {
+            color: #31572C;
+            font-weight: 700;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        /* ------------------ 역할 선택 버튼 스타일 ------------------ */
+        .role-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .role-card {
+            flex: 1;
+            aspect-ratio: 1 / 1;
+            max-width: 180px;
+            background-color: #31572C; 
+            color: #ffffff;
+            border-radius: 24px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(49, 87, 44, 0.2);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .role-card:hover {
+            transform: scale(1.04);
+            background-color: #132A13;
+        }
+
+        /* ------------------ 담당교과 선택 그리드 스타일 ------------------ */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 130px); 
+            gap: 24px;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 25px;
+        }
+
+        .subject-card {
+            width: 130px;
+            height: 130px;
+            background-color: #f7f9f6;
+            color: #4F772D;
+            border-radius: 28px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #e1e6e1;
+            transition: transform 0.2s, background-color 0.2s, color 0.2s;
+        }
+
+        .subject-card.selected {
+            background-color: #90A955; 
+            color: #ffffff;
+            border-color: #90A955;
+            box-shadow: 0 4px 12px rgba(144, 169, 85, 0.3);
+        }
+
+        /* ------------------ 대시보드 상단바 스타일 ------------------ */
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e6e1;
+            margin-bottom: 30px;
+        }
+
+        .nav-left-profile {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .dashboard-nav .brand {
+            font-size: 24px;
+            font-weight: 800;
+            color: #31572C; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .subject-badge {
+            background-color: #90A955; 
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .nav-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-edit-btn {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4F772D;
+            background-color: #f0f4f0;
+            border: 1px solid #e1e6e1;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .profile-edit-btn:hover {
+            background-color: #4F772D;
+            color: #ffffff;
+            border-color: #4F772D;
+            box-shadow: 0 4px 10px rgba(79, 119, 45, 0.15);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #708271;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 6px;
+        }
+        .logout-btn:hover {
+            color: #b3261e;
+            text-decoration: underline;
+        }
+
+        .dashboard-layout-main {
+            display: grid;
+            grid-template-columns: 180px 1fr 260px;
+            gap: 25px;
+            align-items: start;
+        }
+
+        /* ------------------ 좌측 카테고리 사이드바 ------------------ */
+        .sidebar-category {
+            background-color: #fbfcfb;
+            border: 1px solid #e1e6e1;
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-category-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #31572C;
+            padding: 5px 10px 10px 10px;
+            border-bottom: 1px dashed #cbd5e1;
+            margin-bottom: 5px;
+        }
+
+        .category-item {
+            padding: 14px 18px;
+            background-color: #ffffff;
+            border: 1px solid #e1e6e1;
+            color: #4F772D;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .category-item.active {
+            background-color: #132A13; 
+            color: #ffffff;
+            border-color: #132A13;
+            box-shadow: 0 4px 12px rgba(19, 42, 19, 0.2);
+        }
+
+        /* ------------------ 우측 바로가기 퀵 패널 통합 ------------------ */
+        .sidebar-quick-notice-panel {
+            background-color: #ECF39E; 
+            border: 1px solid #90A955;
+            border-radius: 20px;
+            padding: 18px;
+            position: sticky;
+            top: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .quick-section-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quick-panel-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #132A13;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #90A955;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quick-notice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-notice-item {
+            background-color: #ffffff;
+            border: 1px solid #f6f9da;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .quick-notice-item:hover {
+            transform: translateY(-2px);
+            border-color: #132A13;
+            box-shadow: 0 4px 10px rgba(19, 42, 19, 0.08);
+        }
+
+        .quick-notice-item .q-sub {
+            font-size: 11px;
+            font-weight: 800;
+            color: #31572C;
+            background-color: #eef2d8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .quick-notice-item .q-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #132A13;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .quick-notice-empty {
+            font-size: 12px;
+            color: #4F772D;
+            text-align: center;
+            padding: 15px 0;
+            background-color: rgba(255,255,255,0.4);
+            border-radius: 8px;
+        }
+
+        /* ------------------ 우측 메인 콘텐츠 스타일 ------------------ */
+        .content-area-right {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .upload-section {
+            background-color: #fbfcfb;
+            border: 1px solid #e1e6e1;
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .upload-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #132A13;
+            margin-bottom: 15px;
+        }
+
+        .upload-section input {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            margin-bottom: 12px;
+        }
+
+        .notice-check-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .notice-check-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .notice-check-row label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4F772D;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .media-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .image-upload-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .image-preview-flex-box {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            background: #ffffff;
+            border: 1px dashed #ced4da;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .image-preview-box {
+            position: relative;
+            flex: 0 0 auto;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #dbdbdb;
+        }
+
+        .image-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-preview-box .remove-img-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background-color: rgba(179, 38, 30, 0.9);
+            color: white;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .upload-section .post-btn {
+            width: 140px;
+            height: 48px;
+            background-color: #31572C;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .upload-section .post-btn:hover {
+            background-color: #132A13;
+        }
+
+        /* ------------------ 피드 및 레이아웃 구조 스타일 ------------------ */
+        .feed-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(19,42,19,0.01);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            scroll-margin-top: 30px; 
+            transition: border-color 0.3s ease;
+        }
+
+        .feed-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .feed-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .feed-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .feed-tag {
+            font-size: 12px;
+            font-weight: 700;
+            color: #31572C;
+            background-color: #f0f4f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .feed-tag.notice-tag {
+            color: #132A13;
+            background-color: #ECF39E; 
+        }
+
+        .feed-author {
+            font-size: 14px;
+            font-weight: 700;
+            color: #132A13;
+        }
+
+        .feed-meta-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .feed-date {
+            font-size: 12px;
+            color: #708271;
+            font-weight: 500;
+        }
+
+        .feed-controls-panel {
+            display: flex;
+            gap: 4px;
+        }
+
+        .control-icon-btn {
+            background: #f7f9f6;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            color: #132A13;
+        }
+
+        .feed-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #132A13; 
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .feed-content {
+            font-size: 14px;
+            color: #31572C;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .content-toggle-btn {
+            background: none;
+            border: none;
+            color: #31572C;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            padding: 5px 0;
+            width: fit-content;
+            margin-bottom: 10px;
+        }
+        .content-toggle-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* [개선 완료] 원본 이미지 비율 유지를 위한 반응형 미디어 박스 */
+        .feed-images-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .feed-img-wrapper {
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .feed-attached-img {
+            max-width: 100%;
+            max-height: 400px; /* 세로가 너무 길어 길쭉해지는 현상 방지 상한선 */
+            object-fit: contain; /* 원본 비율 완전 보존 구조 */
+            border-radius: 12px;
+            border: 1px solid #e1e6e1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px 0;
+            color: #708271;
+            font-size: 14px;
+        }
+
+        /* ------------------ 댓글 영역 디자인 스펙 ------------------ */
+        .comment-system-zone {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            text-align: left;
+        }
+
+        .comment-zone-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #31572C;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comments-list-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .single-comment-card {
+            background-color: #f8fafd;
+            border: 1px solid #e6ebe6;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .single-comment-card.is-teacher-reply {
+            background-color: #f0f7ed;
+            border-color: #cfe2ce;
+        }
+
+        .comment-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comment-author-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: #132A13;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .author-role-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+
+        .author-role-tag.role-teacher {
+            background-color: #31572C;
+            color: #ffffff;
+        }
+
+        .comment-date-delete-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-date {
+            font-size: 11px;
+            color: #708271;
+        }
+
+        .comment-action-btn {
+            background: none;
+            border: none;
+            color: #4F772D;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .comment-action-btn:hover {
+            text-decoration: underline;
+        }
+        .comment-action-btn.del-btn {
+            color: #b3261e;
+        }
+
+        .comment-body-text {
+            font-size: 13px;
+            color: #2b442b;
+            line-height: 1.5;
+        }
+
+        /* [개선 완료] 댓글 본문 이미지 원본 비율 보존 출력 트랙 */
+        .comment-attached-images {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .comment-img-wrapper {
+            max-width: 100%;
+        }
+
+        .comment-attached-img {
+            max-width: 80%;
+            max-height: 220px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* 댓글 등록/수정 폼 구역 */
+        .comment-insert-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            background: #fbfcfb;
+            border: 1px solid #e1e6e1;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .comment-input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .comment-input-form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .comment-submit-btn {
+            width: 75px;
+            height: 36px;
+            background-color: #4F772D;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .comment-submit-btn:hover {
+            background-color: #31572C;
+        }
+
+        .comment-media-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-img-upload-btn {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comment-img-preview-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-top: 5px;
+            background: #ffffff;
+            padding: 5px;
+            border: 1px dashed #e1e6e1;
+            border-radius: 6px;
+        }
+
+        .comment-preview-item {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #dbdbdb;
+            flex: 0 0 auto;
+        }
+        .comment-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .comment-preview-item .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(179, 38, 30, 0.8);
+            color: white;
+            border: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ------------------ 회원 정보 수정 모달 창 ------------------ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(19, 42, 19, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            padding: 30px;
+            text-align: left;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #132A13;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn-row .main-btn, 
+        .modal-btn-row .modal-cancel-btn {
+            flex: 1; 
+            height: 55px;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+        }
+
+        .modal-cancel-btn {
+            background-color: #e1e6e1;
+            color: #4F772D;
+        }
+        
+        .modal-subject-selector-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .modal-sub-badge-btn {
+            padding: 10px;
+            background-color: #f7f9f6;
+            border: 1px solid #e1e6e1;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            color: #4F772D;
+        }
+        
+        .modal-sub-badge-btn.selected {
+            background-color: #90A955;
+            color: #ffffff;
+            border-color: #90A955;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loginPage" class="page active">
+        <div class="title-area">
+            <h1>안녕하세요!<br>어떻게 하시겠어요?</h1>
+        </div>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>아이디 혹은 이메일</label>
+                <input type="text" id="loginIdentifier" placeholder="아이디 또는 이메일 입력" required>
+            </div>
+            <div class="input-group">
+                <label>비밀번호</label>
+                <input type="password" id="loginPw" placeholder="비밀번호를 입력하세요" required>
+            </div>
+            <button type="submit" class="main-btn">로그인</button>
+        </form>
+        <div class="footer-link">
+            계정이 없으신가요?<span class="link-text" id="goToRegister">회원가입</span>
+        </div>
+    </div>
+
+    <div id="registerPage" class="page hidden">
+        <div class="title-area">
+            <h1>회원가입</h1>
+        </div>
+        <form id="registerForm">
+            <div class="input-group">
+                <label>이메일 주소</label>
+                <div class="input-row">
+                    <input type="email" id="regEmail" placeholder="이메일을 입력하세요" required>
+                    <button type="button" class="row-btn" id="btnCheckEmail">인증 요청</button>
+                </div>
+                <div id="emailMsg" class="msg"></div>
+            </div>
+
+            <div class="input-group hidden" id="codeSection">
+                <label>인증 번호 (5자리)</label>
+                <div class="input-row">
+                    <input type="text" id="verificationCode" placeholder="인증코드를 입력하세요" maxlength="5">
+                    <button type="button" class="row-btn" id="btnVerifyCode">인증 확인</button>
+                </div>
+                <div id="codeMsg" class="msg"></div>
+            </div>
+
+            <div class="input-group hidden" id="usernameSection">
+                <label>아이디 설정</label>
+                <div class="input-row">
+                    <input type="text" id="regUsername" placeholder="아이디를 입력하세요">
+                    <button type="button" class="row-btn" id="btnCheckUsername">중복 확인</button>
+                </div>
+                <div id="usernameMsg" class="msg"></div>
+            </div>
+
+            <div id="passwordSection" class="hidden">
+                <div class="input-group">
+                    <label>교사/사용자 이름 설정</label>
+                    <input type="text" id="regName" placeholder="게시글에 노출될 이름 입력 (예: 홍길동)">
+                </div>
+                <div class="input-group">
+                    <label>새 비밀번호 입력</label>
+                    <input type="password" id="regPw" placeholder="영문 소문자, 숫자, 특수문자 조합 8자 이상">
+                </div>
+                <div class="input-group">
+                    <label>새 비밀번호 재입력</label>
+                    <input type="password" id="regPwConfirm" placeholder="비밀번호 재입력">
+                    <div id="pwMsg" class="msg"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="main-btn" id="btnSubmitRegister" disabled>회원가입 완료</button>
+        </form>
+        <div class="footer-link">
+            이미 계정이 있으신가요?<span class="link-text" id="goToLogin">로그인으로 이동</span>
+        </div>
+    </div>
+
+    <div id="rolePage" class="page hidden">
+        <div class="title-area">
+            <h1>반갑습니다!<br>당신의 역할을 선택해 주세요.</h1>
+        </div>
+        <div class="role-container">
+            <div class="role-card" onclick="selectRoleAndSave('teacher')">교사</div>
+            <div class="role-card" onclick="selectRoleAndSave('student')">학생</div>
+        </div>
+    </div>
+
+    <div id="subjectPage" class="page hidden">
+        <div class="title-area">
+            <h1>담당하시는 <span style="color:#90A955;">교과 과목</span>을<br>모두 선택해주세요! (중복 선택 가능)</h1>
+        </div>
+        <div class="subject-grid" id="selectSubjectGrid">
+            <div class="subject-card" data-sub="국어" onclick="toggleSubjectSelection(this)">국어</div>
+            <div class="subject-card" data-sub="영어" onclick="toggleSubjectSelection(this)">영어</div>
+            <div class="subject-card" data-sub="수학" onclick="toggleSubjectSelection(this)">수학</div>
+            <div class="subject-card" data-sub="사회" onclick="toggleSubjectSelection(this)">사회</div>
+            <div class="subject-card" data-sub="과학" onclick="toggleSubjectSelection(this)">과학</div>
+            <div class="subject-card" data-sub="역사" onclick="toggleSubjectSelection(this)">역사</div>
+            <div class="subject-card" data-sub="정보" onclick="toggleSubjectSelection(this)">정보</div>
+            <div class="subject-card" data-sub="기가" onclick="toggleSubjectSelection(this)">기과</div>
+            <div class="subject-card" data-sub="음악" onclick="toggleSubjectSelection(this)">음악</div>
+        </div>
+        <button class="main-btn" onclick="submitSelectedSubjects()">선택 완료 및 대시보드 진입</button>
+    </div>
+
+    <div id="mainDashboardPage" class="page wide-page hidden">
+        <nav class="dashboard-nav">
+            <div class="nav-left-profile">
+                <div class="brand">ClassHub <span id="teacherSubjectBadges"></span></div>
+            </div>
+            <div class="nav-right-actions">
+                <button class="profile-edit-btn" onclick="openProfileModal()">⚙️ 내 정보 수정</button>
+                <button class="logout-btn" onclick="logout()">로그아웃</button>
+            </div>
+        </nav>
+
+        <div class="dashboard-layout-main">
+            <aside class="sidebar-category" id="teacherSidebar">
+                <div class="sidebar-category-title">🔍 타교과 피드 탐색</div>
+                <div class="category-item" data-tsub="국어" onclick="switchTeacherViewSubject('국어')">국어</div>
+                <div class="category-item" data-tsub="영어" onclick="switchTeacherViewSubject('영어')">영어</div>
+                <div class="category-item" data-tsub="수학" onclick="switchTeacherViewSubject('수학')">수학</div>
+                <div class="category-item" data-tsub="사회" onclick="switchTeacherViewSubject('사회')">사회</div>
+                <div class="category-item" data-tsub="과학" onclick="switchTeacherViewSubject('과학')">과학</div>
+                <div class="category-item" data-tsub="역사" onclick="switchTeacherViewSubject('역사')">역사</div>
+                <div class="category-item" data-tsub="정보" onclick="switchTeacherViewSubject('정보')">정보</div>
+                <div class="category-item" data-tsub="기가" onclick="switchTeacherViewSubject('기가')">기가</div>
+                <div class="category-item" data-tsub="음악" onclick="switchTeacherViewSubject('음악')">음악</div>
+            </aside>
+
+            <div class="content-area-right">
+                <section class="upload-section" id="teacherUploadContainer">
+                    <h2 id="formSectionTitle">📢 학생에게 교육 정보 전달하기</h2>
+                    <form id="infoUploadForm">
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label style="font-size:13px; margin-bottom:5px;">발송할 교과 선택</label>
+                            <select id="uploadSubjectSelect" style="width:100%; height:45px; border-radius:8px; padding:0 10px;"></select>
+                        </div>
+                        <input type="text" id="infoTitle" placeholder="안내글 제목을 입력하세요" required>
+                        
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label style="font-size:13px; margin-bottom:5px;">상세 교육 정보 작성 (드래그 후 서식 지정 가능)</label>
+                            <div class="editor-toolbar">
+                                <button type="button" class="editor-btn" onclick="applyRichFormat('bold')"><b>B</b></button>
+                                <button type="button" class="editor-btn" onclick="applyRichFormat('italic')"><i>I</i></button>
+                                <button type="button" class="editor-btn" onclick="applyRichFormat('underline')"><u>U</u></button>
+                            </div>
+                            <div id="infoContent" class="rich-editor-box" contenteditable="true" placeholder="학생들에게 전달할 상세 교육 정보를 작성하세요."></div>
+                        </div>
+                        
+                        <div class="notice-check-row">
+                            <input type="checkbox" id="infoIsNotice">
+                            <label for="infoIsNotice">📌 중요 공지사항으로 등록 (피드 상단 강조 태그 부착)</label>
+                        </div>
+
+                        <div class="media-control-row">
+                            <label for="imageInput" class="image-upload-label">📷 사진 첨부하기 (다중 선택 가능)</label>
+                            <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                            <button type="submit" id="btnSubmitPost" class="post-btn">정보 게시하기</button>
+                        </div>
+
+                        <div id="imagePreviewContainer" class="image-preview-flex-box hidden"></div>
+                    </form>
+                </section>
+
+                <section class="feed-section">
+                    <h2><span id="currentTeacherViewText" style="color:#31572C;">국어</span> 교육 정보 목록</h2>
+                    <div id="feedContainer" class="feed-container" style="margin-top: 15px;"></div>
+                </section>
+            </div>
+
+            <aside class="sidebar-quick-notice-panel">
+                <div class="quick-section-block">
+                    <div class="quick-panel-title">📌 중요 공지 바로가기</div>
+                    <div id="teacherQuickNoticeList" class="quick-notice-list"></div>
+                </div>
+                <div class="quick-section-block">
+                    <div class="quick-panel-title">📢 최신 교육 정보 바로가기</div>
+                    <div id="teacherQuickGeneralList" class="quick-notice-list"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="studentDashboardPage" class="page wide-page hidden">
+        <nav class="dashboard-nav">
+            <div class="nav-left-profile">
+                <div class="brand">ClassHub <span style="background-color: #90A955;" class="subject-badge">학생 모드</span></div>
+            </div>
+            <div class="nav-right-actions">
+                <button class="profile-edit-btn" onclick="openProfileModal()">⚙️ 내 정보 수정</button>
+                <button class="logout-btn" onclick="logout()">로그아웃</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-layout-main">
+            <aside class="sidebar-category">
+                <div class="sidebar-category-title">📚 교과 카테고리</div>
+                <div class="category-item" data-subject="국어" onclick="switchStudentSubject('국어')">국어</div>
+                <div class="category-item" data-subject="영어" onclick="switchStudentSubject('영어')">영어</div>
+                <div class="category-item" data-subject="수학" onclick="switchStudentSubject('수학')">수학</div>
+                <div class="category-item" data-subject="사회" onclick="switchStudentSubject('사회')">사회</div>
+                <div class="category-item" data-subject="과학" onclick="switchStudentSubject('과학')">과학</div>
+                <div class="category-item" data-subject="역사" onclick="switchStudentSubject('역사')">역사</div>
+                <div class="category-item" data-subject="정보" onclick="switchStudentSubject('정보')">정보</div>
+                <div class="category-item" data-subject="기가" onclick="switchStudentSubject('기가')">기가</div>
+                <div class="category-item" data-subject="음악" onclick="switchStudentSubject('음악')">음악</div>
+            </aside>
+
+            <section class="feed-section">
+                <h2><span id="currentViewSubjectText" style="color: #31572C;">국어</span> 교육 정보 목록</h2>
+                <div id="studentFeedContainer" class="feed-container" style="margin-top: 15px;"></div>
+            </section>
+
+            <aside class="sidebar-quick-notice-panel">
+                <div class="quick-section-block">
+                    <div class="quick-panel-title">📌 중요 공지 바로가기</div>
+                    <div id="studentQuickNoticeList" class="quick-notice-list"></div>
+                </div>
+                <div class="quick-section-block">
+                    <div class="quick-panel-title">📢 최신 교육 정보 바로가기</div>
+                    <div id="studentQuickGeneralList" class="quick-notice-list"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>⚙️ 회원 정보 수정</h3>
+            <div class="input-group">
+                <label>변경할 교사/사용자 이름</label>
+                <input type="text" id="modalName" placeholder="이름 입력">
+            </div>
+            <div class="input-group">
+                <label>변경할 아이디</label>
+                <input type="text" id="modalUsername" placeholder="새로운 아이디 입력">
+            </div>
+            <div class="input-group">
+                <label>변경할 비밀번호</label>
+                <input type="password" id="modalPassword" placeholder="새로운 비밀번호 입력">
+            </div>
+            
+            <div class="input-group">
+                <label>역할 수정</label>
+                <select id="modalRole" onchange="toggleModalSubjectBox()">
+                    <option value="teacher">교사 (Teacher)</option>
+                    <option value="student">학생 (Student)</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="modalSubjectGroup">
+                <label>담당 교과 과목 선택/수정 (중복 가능)</label>
+                <div class="modal-subject-selector-box">
+                    <div class="modal-sub-badge-btn" data-msub="국어" onclick="toggleModalSubjectBadge(this)">국어</div>
+                    <div class="modal-sub-badge-btn" data-msub="영어" onclick="toggleModalSubjectBadge(this)">영어</div>
+                    <div class="modal-sub-badge-btn" data-msub="수학" onclick="toggleModalSubjectBadge(this)">수학</div>
+                    <div class="modal-sub-badge-btn" data-msub="사회" onclick="toggleModalSubjectBadge(this)">사회</div>
+                    <div class="modal-sub-badge-btn" data-msub="과학" onclick="toggleModalSubjectBadge(this)">과학</div>
+                    <div class="modal-sub-badge-btn" data-msub="역사" onclick="toggleModalSubjectBadge(this)">역사</div>
+                    <div class="modal-sub-badge-btn" data-msub="정보" onclick="toggleModalSubjectBadge(this)">정보</div>
+                    <div class="modal-sub-badge-btn" data-msub="기가" onclick="toggleModalSubjectBadge(this)">기가</div>
+                    <div class="modal-sub-badge-btn" data-msub="음악" onclick="toggleModalSubjectBadge(this)">음악</div>
+                </div>
+            </div>
+
+            <div class="modal-btn-row">
+                <button class="main-btn" onclick="saveProfileChanges()">변경사항 저장</button>
+                <button class="modal-cancel-btn" onclick="closeProfileModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    const EXISTING_EMAILS = ["teacher@school.tech"];
+    const EXISTING_USERNAMES = ["teacher1"];
+
+    let generatedCode = ""; 
+    let isEmailVerified = false;
+    let isUsernameVerified = false;
+    let isPasswordMatched = false;
+    
+    let attachedImagesArray = []; 
+    let editingPostId = null;     
+    let currentSessionUser = null; 
+    let selectedSubjectsPool = [];
+
+    // 실시간 댓글용 임시 이미지 버퍼 오브젝트
+    let commentImagesBuffer = {};
+
+    const loginPage = document.getElementById('loginPage');
+    const registerPage = document.getElementById('registerPage');
+    const rolePage = document.getElementById('rolePage');
+    const subjectPage = document.getElementById('subjectPage');
+    const mainDashboardPage = document.getElementById('mainDashboardPage');
+    const studentDashboardPage = document.getElementById('studentDashboardPage');
+
+    window.addEventListener('DOMContentLoaded', function() {
+        const savedSession = localStorage.getItem('current_session_user_v4');
+        const savedState = localStorage.getItem('current_view_state_v4');
+
+        if (savedSession) {
+            currentSessionUser = JSON.parse(savedSession);
+            let stateObj = savedState ? JSON.parse(savedState) : { role: currentSessionUser.savedRole, subject: '국어' };
+
+            if (stateObj.role === 'teacher') {
+                loginPage.classList.remove('active');
+                loginPage.classList.add('hidden');
+                applyTeacherDashboardInit(currentSessionUser.savedSubjects);
+                switchTeacherViewSubject(stateObj.subject || '국어');
+            } else if (stateObj.role === 'student') {
+                loginPage.classList.remove('active');
+                loginPage.classList.add('hidden');
+                switchStudentSubject(stateObj.subject || '국어');
+                navigateTo(studentDashboardPage);
+            }
+        }
+    });
+
+    function saveViewStateToStorage(role, subjectName) {
+        localStorage.setItem('current_view_state_v4', JSON.stringify({ role: role, subject: subjectName }));
+    }
+
+    function navigateTo(targetPage) {
+        const activePage = document.querySelector('.page.active');
+        if (activePage) {
+            activePage.classList.remove('active');
+            setTimeout(() => {
+                activePage.classList.add('hidden');
+                targetPage.classList.remove('hidden');
+                setTimeout(() => targetPage.classList.add('active'), 50);
+            }, 400);
+        } else {
+            targetPage.classList.remove('hidden');
+            targetPage.classList.add('active');
+        }
+    }
+
+    document.getElementById('goToRegister').addEventListener('click', () => navigateTo(registerPage));
+    document.getElementById('goToLogin').addEventListener('click', () => navigateTo(loginPage));
+
+    document.getElementById('regEmail').addEventListener('input', function() {
+        this.value = this.value.toLowerCase().replace(/\s/g, '');
+    });
+
+    document.getElementById('regUsername').addEventListener('input', function() {
+        this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    });
+
+    document.getElementById('btnCheckEmail').addEventListener('click', function() {
+        const emailInput = document.getElementById('regEmail').value.trim();
+        const emailMsg = document.getElementById('emailMsg');
+        if (!emailInput) { alert("이메일을 입력해주세요."); return; }
+
+        if (!emailInput.endsWith('@gmail.com')) {
+            emailMsg.textContent = "올바르지 않은 이메일 주소입니다.";
+            emailMsg.className = "msg error";
+            isEmailVerified = false;
+            return;
+        }
+
+        let storedUsers = JSON.parse(localStorage.getItem('users_v4')) || [];
+        const isEmailExistInStorage = storedUsers.some(user => user.email === emailInput);
+
+        if (EXISTING_EMAILS.includes(emailInput) || isEmailExistInStorage) {
+            emailMsg.textContent = "이미 존재하는 이메일입니다.";
+            emailMsg.className = "msg error";
+            isEmailVerified = false;
+        } else {
+            emailMsg.textContent = "사용 가능한 이메일입니다. 인증번호가 발송되었습니다.";
+            emailMsg.className = "msg success";
+            generatedCode = Math.floor(10000 + Math.random() * 90000).toString();
+            alert(`[이메일 모의 발송]\n인증코드 5자리: ${generatedCode}`);
+            
+            document.getElementById('regEmail').readOnly = true;
+            document.getElementById('btnCheckEmail').disabled = true;
+            document.getElementById('codeSection').classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('btnVerifyCode').addEventListener('click', function() {
+        const codeInput = document.getElementById('verificationCode').value.trim();
+        const codeMsg = document.getElementById('codeMsg');
+
+        if (codeInput === generatedCode) {
+            codeMsg.textContent = "이메일 인증이 완료되었습니다.";
+            codeMsg.className = "msg success";
+            document.getElementById('verificationCode').readOnly = tru... (48KB 남음)
