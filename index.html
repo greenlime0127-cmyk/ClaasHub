@@ -1221,6 +1221,7 @@
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('bold')"><b>B</b></button>
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('italic')"><i>I</i></button>
                                 <button type="button" class="editor-btn" onclick="applyRichFormat('underline')"><u>U</u></button>
+                                <button type="button" class="editor-btn" onclick="applyRichFormat('strikeThrough')"><s>S</s></button>
                             </div>
                             <div id="infoContent" class="rich-editor-box" contenteditable="true" placeholder="학생들에게 전달할 상세 교육 정보를 작성하세요."></div>
                         </div>
@@ -1464,4 +1465,1015 @@
         if (codeInput === generatedCode) {
             codeMsg.textContent = "이메일 인증이 완료되었습니다.";
             codeMsg.className = "msg success";
-            document.getElementById('verificationCode').readOnly = tru... (48KB 남음)
+            document.getElementById('verificationCode').readOnly = true;
+            document.getElementById('btnVerifyCode').disabled = true;
+            document.getElementById('usernameSection').classList.remove('hidden');
+            isEmailVerified = true;
+        } else {
+            codeMsg.textContent = "인증번호가 일치하지 않습니다. 다시 확인해주세요.";
+            codeMsg.className = "msg error";
+            isEmailVerified = false;
+        }
+        toggleSubmitButton();
+    });
+
+    document.getElementById('btnCheckUsername').addEventListener('click', function() {
+        const usernameInput = document.getElementById('regUsername').value.trim();
+        const usernameMsg = document.getElementById('usernameMsg');
+        if (!usernameInput) { alert("아이디를 입력해주세요."); return; }
+
+        let storedUsers = JSON.parse(localStorage.getItem('users_v4')) || [];
+        const isExistInStorage = storedUsers.some(user => user.username === usernameInput);
+
+        if (EXISTING_USERNAMES.includes(usernameInput) || isExistInStorage) {
+            usernameMsg.textContent = "이미 존재하는 아이디입니다.";
+            usernameMsg.className = "msg error";
+            isUsernameVerified = false;
+        } else {
+            usernameMsg.textContent = "사용 가능한 아이디입니다!";
+            usernameMsg.className = "msg success";
+            document.getElementById('regUsername').readOnly = true;
+            document.getElementById('btnCheckUsername').disabled = true;
+            document.getElementById('passwordSection').classList.remove('hidden');
+            isUsernameVerified = true;
+        }
+        toggleSubmitButton();
+    });
+
+    function checkPasswordMatch() {
+        const pw = document.getElementById('regPw').value;
+        const pwConfirm = document.getElementById('regPwConfirm').value;
+        const pwMsg = document.getElementById('pwMsg');
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[a-z\d@$!%*?&]{8,}$/;
+
+        if (!pwConfirm) { 
+            pwMsg.className = "msg"; 
+            isPasswordMatched = false; 
+        } else if (pw === pwConfirm && pw !== "") { 
+            if (passwordRegex.test(pw)) {
+                pwMsg.textContent = "비밀번호가 일치하며 안전합니다."; 
+                pwMsg.className = "msg success"; 
+                isPasswordMatched = true; 
+            } else {
+                pwMsg.textContent = "영문 소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함하여 8자 이상 구성해주세요."; 
+                pwMsg.className = "msg error"; 
+                isPasswordMatched = false; 
+            }
+        } else { 
+            pwMsg.textContent = "비밀번호를 다시 입력해주세요."; 
+            pwMsg.className = "msg error"; 
+            isPasswordMatched = false; 
+        }
+        toggleSubmitButton();
+    }
+    document.getElementById('regPw').addEventListener('input', checkPasswordMatch);
+    document.getElementById('regPwConfirm').addEventListener('input', checkPasswordMatch);
+    document.getElementById('regName').addEventListener('input', toggleSubmitButton);
+
+    function toggleSubmitButton() {
+        const nameVal = document.getElementById('regName').value.trim();
+        document.getElementById('btnSubmitRegister').disabled = !(isEmailVerified && isUsernameVerified && isPasswordMatched && nameVal !== "");
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const email = document.getElementById('regEmail').value.trim();
+        const username = document.getElementById('regUsername').value.trim();
+        const name = document.getElementById('regName').value.trim(); 
+        const password = document.getElementById('regPw').value;
+
+        let users = JSON.parse(localStorage.getItem('users_v4')) || [];
+        users.push({ 
+            id: 'uid_' + Date.now(), 
+            email, 
+            username, 
+            name, 
+            password,
+            savedRole: "",      
+            savedSubjects: []
+        });
+        localStorage.setItem('users_v4', JSON.stringify(users));
+
+        alert("회원가입이 완료되었습니다!");
+        
+        isEmailVerified = false;
+        isUsernameVerified = false;
+        isPasswordMatched = false;
+        document.getElementById('regEmail').readOnly = false;
+        document.getElementById('regEmail').disabled = false;
+        document.getElementById('btnCheckEmail').disabled = false;
+        document.getElementById('verificationCode').readOnly = false;
+        document.getElementById('verificationCode').disabled = false;
+        document.getElementById('btnVerifyCode').disabled = false;
+        document.getElementById('regUsername').readOnly = false;
+        document.getElementById('regUsername').disabled = false;
+        document.getElementById('btnCheckUsername').disabled = false;
+        
+        document.getElementById('registerForm').reset();
+        document.getElementById('codeSection').classList.add('hidden');
+        document.getElementById('usernameSection').classList.add('hidden');
+        document.getElementById('passwordSection').classList.add('hidden');
+        
+        navigateTo(loginPage);
+        document.getElementById('loginIdentifier').value = username;
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const identifier = document.getElementById('loginIdentifier').value.trim();
+        const pw = document.getElementById('loginPw').value;
+
+        let users = JSON.parse(localStorage.getItem('users_v4')) || [];
+        let matchedUser = users.find(user => (user.email === identifier || user.username === identifier) && user.password === pw);
+        
+        if (!matchedUser && (EXISTING_EMAILS.includes(identifier) || EXISTING_USERNAMES.includes(identifier)) && pw === "1234") {
+            matchedUser = { id: "uid_mock", email: "teacher@school.tech", username: identifier, name: "기본교사", password: pw, savedRole: "teacher", savedSubjects: ["국어", "영어"] };
+        }
+
+        if (matchedUser) {
+            currentSessionUser = matchedUser; 
+            localStorage.setItem('current_session_user_v4', JSON.stringify(currentSessionUser));
+            
+            if (currentSessionUser.savedRole) {
+                if (currentSessionUser.savedRole === 'teacher') {
+                    applyTeacherDashboardInit(currentSessionUser.savedSubjects);
+                } else {
+                    switchStudentSubject(currentSessionUser.savedSubjects[0] || '국어');
+                    navigateTo(studentDashboardPage);
+                }
+            } else {
+                navigateTo(rolePage); 
+            }
+        } else {
+            alert("이메일/아이디 혹은 비밀번호가 올바르지 않습니다.");
+        }
+    });
+
+    function selectRoleAndSave(role) {
+        if (!currentSessionUser) return;
+        currentSessionUser.savedRole = role;
+        updateUserStorageData();
+
+        if (role === 'teacher') {
+            selectedSubjectsPool = [];
+            document.querySelectorAll('#selectSubjectGrid .subject-card').forEach(c => c.classList.remove('selected'));
+            navigateTo(subjectPage); 
+        } else if (role === 'student') {
+            currentSessionUser.savedSubjects = ['국어']; 
+            updateUserStorageData();
+            switchStudentSubject('국어');
+            navigateTo(studentDashboardPage);
+        }
+    }
+
+    function toggleSubjectSelection(element) {
+        const subjectName = element.getAttribute('data-sub');
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            selectedSubjectsPool = selectedSubjectsPool.filter(sub => sub !== subjectName);
+        } else {
+            element.classList.add('selected');
+            selectedSubjectsPool.push(subjectName);
+        }
+    }
+
+    function submitSelectedSubjects() {
+        if (selectedSubjectsPool.length === 0) {
+            alert("최소 한 개 이상의 교과 과목을 선택해주세요.");
+            return;
+        }
+        if (!currentSessionUser) return;
+        
+        currentSessionUser.savedSubjects = selectedSubjectsPool;
+        updateUserStorageData();
+
+        applyTeacherDashboardInit(selectedSubjectsPool);
+    }
+
+    function applyTeacherDashboardInit(subjects) {
+        const badgeContainer = document.getElementById('teacherSubjectBadges');
+        badgeContainer.innerHTML = subjects.map(sub => `<span class="subject-badge">${sub} 담당</span>`).join(' ');
+
+        const selectBox = document.getElementById('uploadSubjectSelect');
+        selectBox.innerHTML = subjects.map(sub => `<option value="${sub}">${sub}</option>`).join('');
+
+        const savedState = localStorage.getItem('current_view_state_v4');
+        let initialSub = subjects[0] || '국어';
+        if (savedState) {
+            const parsed = JSON.parse(savedState);
+            if (parsed.role === 'teacher') initialSub = parsed.subject;
+        }
+
+        switchTeacherViewSubject(initialSub);
+        navigateTo(mainDashboardPage);
+    }
+
+    function switchTeacherViewSubject(subjectName) {
+        document.getElementById('currentTeacherViewText').textContent = subjectName;
+        document.querySelectorAll('#teacherSidebar .category-item').forEach(item => {
+            if (item.getAttribute('data-tsub') === subjectName) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        saveViewStateToStorage('teacher', subjectName);
+        renderTeacherFeeds(subjectName);
+    }
+
+    function switchStudentSubject(subjectName) {
+        document.getElementById('currentViewSubjectText').textContent = subjectName;
+        document.querySelectorAll('#studentDashboardPage .category-item').forEach(item => {
+            if (item.getAttribute('data-subject') === subjectName) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+        saveViewStateToStorage('student', subjectName);
+        renderStudentFeeds(subjectName);
+    }
+
+    function toggleModalSubjectBox() {
+        const roleSelect = document.getElementById('modalRole').value;
+        const subGroup = document.getElementById('modalSubjectGroup');
+        if (roleSelect === 'teacher') subGroup.classList.remove('hidden');
+        else subGroup.classList.add('hidden');
+    }
+
+    function toggleModalSubjectBadge(element) {
+        element.classList.toggle('selected');
+    }
+
+    function openProfileModal() {
+        if (!currentSessionUser) return;
+        document.getElementById('modalName').value = currentSessionUser.name || "";
+        document.getElementById('modalUsername').value = currentSessionUser.username || "";
+        document.getElementById('modalPassword').value = currentSessionUser.password || "";
+        
+        const roleSelect = document.getElementById('modalRole');
+        roleSelect.value = currentSessionUser.savedRole || "teacher";
+        toggleModalSubjectBox();
+
+        document.querySelectorAll('.modal-sub-badge-btn').forEach(btn => {
+            const sub = btn.getAttribute('data-msub');
+            if (currentSessionUser.savedSubjects && currentSessionUser.savedSubjects.includes(sub)) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+
+        document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function saveProfileChanges() {
+        const newName = document.getElementById('modalName').value.trim();
+        const newUsername = document.getElementById('modalUsername').value.trim();
+        const newPassword = document.getElementById('modalPassword').value;
+        const newRole = document.getElementById('modalRole').value;
+
+        if (!newName || !newUsername || !newPassword) {
+            alert("빈칸 없이 모든 항목을 입력해주세요.");
+            return;
+        }
+
+        let updatedSubjects = [];
+        if (newRole === 'teacher') {
+            document.querySelectorAll('.modal-sub-badge-btn.selected').forEach(btn => {
+                updatedSubjects.push(btn.getAttribute('data-msub'));
+            });
+            if (updatedSubjects.length === 0) {
+                alert("교사는 최소 한 개 이상의 교과를 선택해야 합니다.");
+                return;
+            }
+        } else {
+            updatedSubjects = ['국어']; 
+        }
+
+        currentSessionUser.name = newName;
+        currentSessionUser.username = newUsername;
+        currentSessionUser.password = newPassword;
+        
+        const isRoleChanged = (currentSessionUser.savedRole !== newRole);
+        currentSessionUser.savedRole = newRole;
+        currentSessionUser.savedSubjects = updatedSubjects;
+        
+        updateUserStorageData();
+        alert("회원 정보 및 교과 설정 수정이 정상적으로 반영되었습니다.");
+        closeProfileModal();
+        
+        if (isRoleChanged) {
+            if (newRole === 'teacher') {
+                mainDashboardPage.classList.remove('hidden');
+                studentDashboardPage.classList.add('hidden');
+                applyTeacherDashboardInit(updatedSubjects);
+            } else {
+                studentDashboardPage.classList.remove('hidden');
+                mainDashboardPage.classList.add('hidden');
+                switchStudentSubject('국어');
+            }
+        } else {
+            if (newRole === 'teacher') {
+                applyTeacherDashboardInit(updatedSubjects);
+            } else {
+                switchStudentSubject(updatedSubjects[0] || '국어');
+            }
+        }
+    }
+
+    function updateUserStorageData() {
+        let storedUsers = JSON.parse(localStorage.getItem('users_v4')) || [];
+        let userIndex = storedUsers.findIndex(u => u.id === currentSessionUser.id);
+        if (userIndex !== -1) {
+            storedUsers[userIndex] = currentSessionUser;
+            localStorage.setItem('users_v4', JSON.stringify(storedUsers));
+        }
+        localStorage.setItem('current_session_user_v4', JSON.stringify(currentSessionUser));
+    }
+
+    /* ------------------ [개선 완료] 서식 명령어 핸들러 ------------------ */
+    function applyRichFormat(command) {
+        document.execCommand(command, false, null);
+    }
+
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (!files.length) return;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                attachedImagesArray.push(event.target.result);
+                renderImagePreviews();
+            };
+            reader.readAsDataURL(file);
+        });
+        e.target.value = "";
+    });
+
+    function renderImagePreviews() {
+        const container = document.getElementById('imagePreviewContainer');
+        if (attachedImagesArray.length === 0) {
+            container.innerHTML = "";
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = attachedImagesArray.map((imgBase64, index) => `
+            <div class="image-preview-box">
+                <img src="${imgBase64}" alt="첨부 이미지 미리보기">
+                <button type="button" class="remove-img-btn" onclick="removeSingleImage(${index})">×</button>
+            </div>
+        `).join('');
+    }
+
+    function removeSingleImage(index) {
+        attachedImagesArray.splice(index, 1);
+        renderImagePreviews();
+    }
+
+    function clearAllSelectedImages() {
+        attachedImagesArray = [];
+        renderImagePreviews();
+    }
+
+    document.getElementById('infoUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const titleInput = document.getElementById('infoTitle');
+        const contentEditor = document.getElementById('infoContent');
+        const targetSubject = document.getElementById('uploadSubjectSelect').value;
+        const isNoticeCheck = document.getElementById('infoIsNotice').checked;
+        
+        // innerHTML을 취득하여 서식을 보존함
+        const richHTMLContent = contentEditor.innerHTML.trim();
+        if(!richHTMLContent || contentEditor.textContent.trim() === "") {
+            alert("상세 교육 내용을 입력해 주세요.");
+            return;
+        }
+
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        
+        if (editingPostId !== null) {
+            allFeeds = allFeeds.map(feed => {
+                if (feed.id === editingPostId) {
+                    return {
+                        ...feed,
+                        subject: targetSubject,
+                        title: titleInput.value.trim(),
+                        content: richHTMLContent, 
+                        images: [...attachedImagesArray], 
+                        isNotice: isNoticeCheck 
+                    };
+                }
+                return feed;
+            });
+            localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+            alert('게시글 수정이 완료되었습니다.');
+            exitEditMode();
+        } else {
+            const now = new Date();
+            const dateString = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            
+            const newFeed = {
+                id: Date.now(),
+                subject: targetSubject,
+                title: titleInput.value.trim(),
+                content: richHTMLContent, 
+                images: [...attachedImagesArray], 
+                isNotice: isNoticeCheck,
+                date: dateString,
+                authorUid: currentSessionUser ? currentSessionUser.id : "unknown",
+                comments: [] 
+            };
+            
+            allFeeds.push(newFeed);
+            localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+            alert('교육 정보 게시글이 전달되었습니다.');
+        }
+        
+        titleInput.value = '';
+        contentEditor.innerHTML = '';
+        document.getElementById('infoIsNotice').checked = false;
+        clearAllSelectedImages();
+        switchTeacherViewSubject(targetSubject);
+    });
+
+    function resolveAuthorName(feed) {
+        let storedUsers = JSON.parse(localStorage.getItem('users_v4')) || [];
+        let matched = storedUsers.find(u => u.id === feed.authorUid);
+        if (matched) return matched.name;
+        if (currentSessionUser && feed.authorUid === currentSessionUser.id) return currentSessionUser.name;
+        return "선생님";
+    }
+
+    // 허용 서식 외 XSS 스크립팅 방지 필터링 가드 엔진 정의
+    function sanitizeHtml(dirty) {
+        return dirty
+            .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
+            .replace(/on\w+="[^"]*"/g, '')
+            .replace(/hrefjavascript:[^"]/g, '');
+    }
+
+    function makeExpandableContent(htmlText, feedId, prefix) {
+        const limit = 250; 
+        const safeHtml = sanitizeHtml(htmlText);
+        
+        // 단순 텍스트 길이 측정용 임시 엘리먼트 생성 파싱
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = safeHtml;
+        const textLen = tempDiv.textContent.length;
+
+        if (textLen <= limit) {
+            return `<div class="feed-content">${safeHtml}</div>`;
+        }
+
+        const shortText = tempDiv.textContent.slice(0, limit) + "... (더보기 필요)";
+        const containerId = prefix + '_feed_text_' + feedId;
+        const toggleBtnId = prefix + '_toggle_btn_' + feedId;
+
+        return `
+            <div id="${containerId}" class="feed-content" data-full="${escapeHtmlAttr(safeHtml)}" data-is-collapsed="true">${shortText}</div>
+            <button id="${toggleBtnId}" class="content-toggle-btn" onclick="toggleContentCollapse('${containerId}', this)">▼ 더보기</button>
+        `;
+    }
+
+    function escapeHtmlAttr(str) {
+        return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function toggleContentCollapse(containerId, buttonElement) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        
+        if (el.getAttribute('data-is-collapsed') === "true") {
+            el.innerHTML = el.getAttribute('data-full');
+            el.setAttribute('data-is-collapsed', "false");
+            buttonElement.textContent = "▲ 접기";
+        } else {
+            const temp = document.createElement('div');
+            temp.innerHTML = el.getAttribute('data-full');
+            el.innerHTML = temp.textContent.slice(0, 250) + "... (더보기 필요)";
+            el.setAttribute('data-is-collapsed', "true");
+            buttonElement.textContent = "▼ 더보기";
+        }
+    }
+
+    function renderQuickNoticeSidePanel(filteredFeeds, noticeListId, generalListId, textPrefix) {
+        const noticeContainer = document.getElementById(noticeListId);
+        const generalContainer = document.getElementById(generalListId);
+        if (!noticeContainer || !generalContainer) return;
+
+        const noticeItems = filteredFeeds.filter(feed => feed.isNotice);
+        const generalItems = filteredFeeds.filter(feed => !feed.isNotice);
+
+        if (noticeItems.length === 0) {
+            noticeContainer.innerHTML = `<div class="quick-notice-empty">📌 지정된 중요 공지가 없습니다.</div>`;
+        } else {
+            noticeContainer.innerHTML = noticeItems.map(feed => {
+                const realTimeName = resolveAuthorName(feed);
+                return `
+                    <div class="quick-notice-item" onclick="scrollToFeedPost('${textPrefix}', ${feed.id})">
+                        <div class="q-sub">${escapeHtml(realTimeName)} 선생님</div>
+                        <div class="q-title">${escapeHtml(feed.title)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        if (generalItems.length === 0) {
+            generalContainer.innerHTML = `<div class="quick-notice-empty">📢 등록된 일반 교육 정보가 없습니다.</div>`;
+        } else {
+            generalContainer.innerHTML = generalItems.map(feed => {
+                const realTimeName = resolveAuthorName(feed);
+                return `
+                    <div class="quick-notice-item" onclick="scrollToFeedPost('${textPrefix}', ${feed.id})">
+                        <div class="q-sub">${escapeHtml(realTimeName)} 선생님</div>
+                        <div class="q-title">${escapeHtml(feed.title)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    function scrollToFeedPost(prefix, feedId) {
+        const cardId = prefix + '_card_' + feedId;
+        const targetCard = document.getElementById(cardId);
+        if (!targetCard) return;
+
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        targetCard.style.borderColor = "#132A13";
+        setTimeout(() => {
+            targetCard.style.borderColor = targetCard.style.borderWidth === '2px' ? "#90A955" : "#e9ecef";
+        }, 1500);
+
+        const el = document.getElementById(prefix + '_feed_text_' + feedId);
+        const toggleBtn = document.getElementById(prefix + '_toggle_btn_' + feedId);
+        if (el && toggleBtn && el.getAttribute('data-is-collapsed') === "true") {
+            el.innerHTML = el.getAttribute('data-full');
+            el.setAttribute('data-is-collapsed', "false");
+            toggleBtn.textContent = "▲ 접기";
+        }
+    }
+
+    /* ------------------ 댓글 업그레이드 엔진 및 미디어 서식 버퍼 트랙 ------------------ */
+    
+    function handleCommentImageSelection(event, feedId, commentId = 'new') {
+        const files = event.target.files;
+        if (!files.length) return;
+        const key = `${feedId}_${commentId}`;
+        if (!commentImagesBuffer[key]) commentImagesBuffer[key] = [];
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                commentImagesBuffer[key].push(e.target.result);
+                renderCommentImagePreviews(feedId, commentId);
+            };
+            reader.readAsDataURL(file);
+        });
+        event.target.value = "";
+    }
+
+    function renderCommentImagePreviews(feedId, commentId = 'new') {
+        const key = `${feedId}_${commentId}`;
+        const container = document.getElementById(`cm_preview_box_${key}`);
+        if (!container) return;
+
+        const imgList = commentImagesBuffer[key] || [];
+        if (imgList.length === 0) {
+            container.innerHTML = "";
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = imgList.map((imgBase64, index) => `
+            <div class="comment-preview-item">
+                <img src="${imgBase64}">
+                <button type="button" class="remove-btn" onclick="removeCommentBufferImage(${feedId}, '${commentId}', ${index})">×</button>
+            </div>
+        `).join('');
+    }
+
+    function removeCommentBufferImage(feedId, commentId, index) {
+        const key = `${feedId}_${commentId}`;
+        if (commentImagesBuffer[key]) {
+            commentImagesBuffer[key].splice(index, 1);
+            renderCommentImagePreviews(feedId, commentId);
+        }
+    }
+
+    // 댓글 전용 서식 도구 적용 명령 트랙 브릿지
+    function applyCommentEditorFormat(command) {
+        document.execCommand(command, false, null);
+    }
+
+    function activateCommentEditForm(feedId, commentId, currentHtmlText, viewTypePrefix, subjectName) {
+        const targetNode = document.getElementById(`cm_body_node_${feedId}_${commentId}`);
+        if (!targetNode) return;
+
+        const key = `${feedId}_${commentId}`;
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        const feed = allFeeds.find(f => f.id === feedId);
+        const originalComment = feed?.comments?.find(c => c.id === commentId);
+        commentImagesBuffer[key] = originalComment?.images ? [...originalComment.images] : [];
+
+        targetNode.innerHTML = `
+            <div class="comment-insert-form" style="margin-top:5px; background:#ffffff; border-color:#cbd5e1;">
+                <div class="comment-input-row">
+                    <div class="editor-toolbar" style="padding:4px;">
+                        <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('bold')"><b>B</b></button>
+                        <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('italic')"><i>I</i></button>
+                        <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('underline')"><u>U</u></button>
+                        <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('strikeThrough')"><s>S</s></button>
+                    </div>
+                    <div id="edit_input_${key}" class="rich-editor-box" contenteditable="true" style="min-height:70px; font-size:13px; border-top-left-radius:0; border-top-right-radius:0;">${sanitizeHtml(currentHtmlText)}</div>
+                </div>
+                <div class="comment-input-form-footer">
+                    <div class="comment-media-row">
+                        <label for="cm_file_${key}" class="comment-img-upload-btn">📷 사진 추가/변경</label>
+                        <input type="file" id="cm_file_${key}" accept="image/*" multiple style="display:none;" onchange="handleCommentImageSelection(event, ${feedId}, ${commentId})">
+                    </div>
+                    <div>
+                        <button class="comment-submit-btn" style="background-color:#132A13; height:32px;" onclick="saveCommentUpdate(${feedId}, ${commentId}, '${subjectName}', '${viewTypePrefix}')">수정 완료</button>
+                        <button class="comment-submit-btn" style="background-color:#708271; width:50px; height:32px;" onclick="cancelCommentEdit('${subjectName}', '${viewTypePrefix}')">취소</button>
+                    </div>
+                </div>
+                <div id="cm_preview_box_${key}" class="comment-img-preview-container ${commentImagesBuffer[key].length === 0 ? 'hidden' : ''}"></div>
+            </div>
+        `;
+        renderCommentImagePreviews(feedId, commentId);
+    }
+
+    function cancelCommentEdit(subjectName, prefix) {
+        if (prefix === 'tc') renderTeacherFeeds(subjectName);
+        else renderStudentFeeds(subjectName);
+    }
+
+    function saveCommentUpdate(feedId, commentId, subjectName, prefix) {
+        const inputEl = document.getElementById(`edit_input_${feedId}_${commentId}`);
+        if (!inputEl) return;
+        const nextHtml = inputEl.innerHTML.trim();
+        if (!nextHtml || inputEl.textContent.trim() === "") { alert("내용을 입력해주세요."); return; }
+
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        const fIdx = allFeeds.findIndex(f => f.id === feedId);
+        if (fIdx === -1) return;
+
+        const cIdx = allFeeds[fIdx].comments.findIndex(c => c.id === commentId);
+        if (cIdx === -1) return;
+
+        const key = `${feedId}_${commentId}`;
+        allFeeds[fIdx].comments[cIdx].body = sanitizeHtml(nextHtml);
+        allFeeds[fIdx].comments[cIdx].images = commentImagesBuffer[key] ? [...commentImagesBuffer[key]] : [];
+        
+        delete commentImagesBuffer[key];
+        localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+        alert("댓글 수정이 완료되었습니다.");
+
+        if (prefix === 'tc') renderTeacherFeeds(subjectName);
+        else renderStudentFeeds(subjectName);
+    }
+
+    function generateCommentSectionHtml(feed, viewTypePrefix) {
+        const commentList = feed.comments || [];
+        const currentUserRole = currentSessionUser ? currentSessionUser.savedRole : 'student';
+        const currentUserId = currentSessionUser ? currentSessionUser.id : 'unknown';
+
+        let commentCardsHtml = '';
+        if (commentList.length === 0) {
+            commentCardsHtml = `<div style="font-size:12px; color:#708271; padding: 5px 0;">작성된 질문이나 댓글이 없습니다. 궁금한 점을 남겨보세요!</div>`;
+        } else {
+            commentCardsHtml = commentList.map(comment => {
+                const isTeacher = comment.authorRole === 'teacher';
+                const isMyComment = (comment.authorUid === currentUserId);
+                
+                let controlButtonsHtml = '';
+                if (isMyComment) {
+                    // 서식 보호 패싱을 위한 특수 이스케이프 문자 바인딩 처리
+                    const backtickEscapedBody = comment.body.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+                    controlButtonsHtml = `
+                        <button class="comment-action-btn" onclick="activateCommentEditForm(${feed.id}, ${comment.id}, \`${backtickEscapedBody}\`, '${viewTypePrefix}', '${feed.subject}')">✏️ 수정</button>
+                        <button class="comment-action-btn del-btn" onclick="deleteCommentNode(${feed.id}, ${comment.id}, '${feed.subject}', '${viewTypePrefix}')">❌ 삭제</button>
+                    `;
+                }
+                
+                // [개선 완료] 댓글 첨부 이미지 원본 비율 보존 매핑 레이아웃
+                let attachedImagesHtml = '';
+                if (comment.images && comment.images.length > 0) {
+                    attachedImagesHtml = `
+                        <div class="comment-attached-images">
+                            ${comment.images.map(img => `
+                                <div class="comment-img-wrapper">
+                                    <img src="${img}" class="comment-attached-img" alt="댓글 첨부 이미지">
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="single-comment-card ${isTeacher ? 'is-teacher-reply' : ''}">
+                        <div class="comment-header-row">
+                            <div class="comment-author-badge">
+                                💬 <span>${escapeHtml(comment.authorName)}</span>
+                                <span class="author-role-tag ${isTeacher ? 'role-teacher' : ''}">${isTeacher ? '교사' : '학생'}</span>
+                            </div>
+                            <div class="comment-date-delete-row">
+                                <span class="comment-date">${comment.date}</span>
+                                ${controlButtonsHtml}
+                            </div>
+                        </div>
+                        <div id="cm_body_node_${feed.id}_${comment.id}" style="display:flex; flex-direction:column; gap:4px;">
+                            <div class="comment-body-text">${sanitizeHtml(comment.body)}</div>
+                            ${attachedImagesHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const bufferKey = `${feed.id}_new`;
+
+        return `
+            <div class="comment-system-zone">
+                <div class="comment-zone-title">💬 질의응답 및 피드백 (${commentList.length})</div>
+                <div class="comments-list-wrapper">
+                    ${commentCardsHtml}
+                </div>
+                <div class="comment-insert-form">
+                    <div class="comment-input-row">
+                        <div class="editor-toolbar" style="padding:4px;">
+                            <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('bold')"><b>B</b></button>
+                            <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('italic')"><i>I</i></button>
+                            <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('underline')"><u>U</u></button>
+                            <button type="button" class="editor-btn" style="padding:2px 6px; font-size:11px;" onclick="applyCommentEditorFormat('strikeThrough')"><s>S</s></button>
+                        </div>
+                        <div id="${viewTypePrefix}_input_cm_${feed.id}" class="rich-editor-box" contenteditable="true" style="min-height:65px; font-size:13px; border-top-left-radius:0; border-top-right-radius:0;" placeholder="${currentUserRole === 'teacher' ? '학생들에게 피드백이나 서식 있는 답변을 남겨주세요.' : '안내 내용 중 궁금한 점을 서식 도구를 활용해 질문해보세요.'}"></div>
+                    </div>
+                    <div class="comment-input-form-footer">
+                        <div class="comment-media-row">
+                            <label for="cm_file_${bufferKey}" class="comment-img-upload-btn">📷 사진 첨부하기</label>
+                            <input type="file" id="cm_file_${bufferKey}" accept="image/*" multiple style="display: none;" onchange="handleCommentImageSelection(event, ${feed.id}, 'new')">
+                        </div>
+                        <button class="comment-submit-btn" onclick="submitNewComment(${feed.id}, '${feed.subject}', '${viewTypePrefix}')">등록</button>
+                    </div>
+                    <div id="cm_preview_box_${bufferKey}" class="comment-img-preview-container hidden"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function submitNewComment(feedId, subjectName, prefix) {
+        const inputEl = document.getElementById(`${prefix}_input_cm_${feedId}`);
+        if (!inputEl) return;
+        const commentHtml = inputEl.innerHTML.trim();
+        if (!commentHtml || inputEl.textContent.trim() === "") { alert("내용을 입력해주세요."); return; }
+
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        const targetFeedIndex = allFeeds.findIndex(f => f.id === feedId);
+        if (targetFeedIndex === -1) return;
+
+        if (!allFeeds[targetFeedIndex].comments) {
+            allFeeds[targetFeedIndex].comments = [];
+        }
+
+        const now = new Date();
+        const timeString = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        const bufferKey = `${feedId}_new`;
+        const attachedCommentImages = commentImagesBuffer[bufferKey] ? [...commentImagesBuffer[bufferKey]] : [];
+
+        const newCommentObj = {
+            id: Date.now(),
+            authorUid: currentSessionUser ? currentSessionUser.id : "uid_guest",
+            authorName: currentSessionUser ? currentSessionUser.name : "익명",
+            authorRole: currentSessionUser ? currentSessionUser.savedRole : "student",
+            body: sanitizeHtml(commentHtml), // 서식 태그 허용 안전화 컴파일
+            images: attachedCommentImages, 
+            date: timeString
+        };
+
+        allFeeds[targetFeedIndex].comments.push(newCommentObj);
+        localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+
+        delete commentImagesBuffer[bufferKey];
+        inputEl.innerHTML = '';
+        
+        if (prefix === 'tc') renderTeacherFeeds(subjectName);
+        else renderStudentFeeds(subjectName);
+    }
+
+    function deleteCommentNode(feedId, commentId, subjectName, prefix) {
+        if (!confirm("댓글을 완전히 삭제하시겠습니까?")) return;
+
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        const targetFeedIndex = allFeeds.findIndex(f => f.id === feedId);
+        if (targetFeedIndex === -1) return;
+
+        if (allFeeds[targetFeedIndex].comments) {
+            allFeeds[targetFeedIndex].comments = allFeeds[targetFeedIndex].comments.filter(c => c.id !== commentId);
+            localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+        }
+
+        if (prefix === 'tc') renderTeacherFeeds(subjectName);
+        else renderStudentFeeds(subjectName);
+    }
+
+    function renderTeacherFeeds(subjectName) {
+        const feedContainer = document.getElementById('feedContainer');
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        let filteredFeeds = allFeeds.filter(feed => feed.subject === subjectName);
+        
+        renderQuickNoticeSidePanel(filteredFeeds, 'teacherQuickNoticeList', 'teacherQuickGeneralList', 'tc');
+
+        if (filteredFeeds.length === 0) {
+            feedContainer.innerHTML = `<p class="no-data">[${subjectName}] 과목에 아직 등록된 교육 정보가 없습니다.</p>`;
+            return;
+        }
+        
+        filteredFeeds.sort((a, b) => {
+            if (a.isNotice && !b.isNotice) return -1;
+            if (!a.isNotice && b.isNotice) return 1;
+            return b.id - a.id;
+        });
+
+        feedContainer.innerHTML = filteredFeeds.map(feed => {
+            const realTimeName = resolveAuthorName(feed); 
+            const imagesList = feed.images ? feed.images : (feed.image ? [feed.image] : []);
+            const noticeTagHtml = feed.isNotice ? `<span class="feed-tag notice-tag">📌 중요 공지</span>` : '';
+            const bodyContentHtml = makeExpandableContent(feed.content, feed.id, 'tc');
+            const commentSectionHtml = generateCommentSectionHtml(feed, 'tc'); 
+
+            let imagesContainerHtml = '';
+            if (imagesList.length > 0) {
+                imagesContainerHtml = `
+                    <div class="feed-images-container">
+                        ${imagesList.map(imgData => `
+                            <div class="feed-img-wrapper">
+                                <img src="${imgData}" class="feed-attached-img" alt="첨부 이미지">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            return `
+                <div id="tc_card_${feed.id}" class="feed-card" style="${feed.isNotice ? 'border: 2px solid #90A955; background-color: #ECF39E;' : ''}">
+                    <div class="feed-main-header">
+                        <div class="feed-info-left">
+                            <div class="feed-badge-row">
+                                ${noticeTagHtml}
+                                <span class="feed-tag">${feed.subject}</span>
+                                <span class="feed-author">${escapeHtml(realTimeName)} 선생님</span>
+                            </div>
+                        </div>
+                        <div class="feed-meta-right">
+                            <span class="feed-date">📅 ${feed.date}</span>
+                            <div class="feed-controls-panel">
+                                <button class="control-icon-btn" onclick="enterEditMode(${feed.id})" title="수정">✏️ 수정</button>
+                                <button class="control-icon-btn" style="color:#b3261e;" onclick="deleteFeedPost(${feed.id}, '${feed.subject}')" title="삭제">🗑️ 삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feed-title">${escapeHtml(feed.title)}</div>
+                    ${bodyContentHtml}
+                    ${imagesContainerHtml}
+                    ${commentSectionHtml}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function deleteFeedPost(feedId, subjectName) {
+        if (confirm("게시물을 삭제하시겠습니까?")) {
+            let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+            allFeeds = allFeeds.filter(feed => feed.id !== feedId);
+            localStorage.setItem('edu_feeds_v4', JSON.stringify(allFeeds));
+            
+            alert("게시물이 삭제되었습니다.");
+            if (editingPostId === feedId) {
+                exitEditMode();
+                document.getElementById('infoTitle').value = '';
+                document.getElementById('infoContent').innerHTML = '';
+                document.getElementById('infoIsNotice').checked = false;
+                clearAllSelectedImages();
+            }
+            switchTeacherViewSubject(subjectName);
+        }
+    }
+
+    function enterEditMode(feedId) {
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        const targetFeed = allFeeds.find(feed => feed.id === feedId);
+        if (!targetFeed) return;
+
+        editingPostId = feedId; 
+        document.getElementById('formSectionTitle').textContent = "✏️ 교육 정보 수정하기";
+        document.getElementById('uploadSubjectSelect').value = targetFeed.subject;
+        document.getElementById('infoTitle').value = targetFeed.title;
+        document.getElementById('infoContent').innerHTML = targetFeed.content; // 서식 HTML 주입
+        document.getElementById('infoIsNotice').checked = !!targetFeed.isNotice;
+        
+        const submitBtn = document.getElementById('btnSubmitPost');
+        submitBtn.textContent = "수정 완료하기";
+
+        const savedImgs = targetFeed.images ? targetFeed.images : (targetFeed.image ? [targetFeed.image] : []);
+        attachedImagesArray = [...savedImgs];
+        renderImagePreviews();
+
+        document.getElementById('teacherUploadContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function exitEditMode() {
+        editingPostId = null;
+        document.getElementById('formSectionTitle').textContent = "📢 학생에게 교육 정보 전달하기";
+        document.getElementById('btnSubmitPost').textContent = "정보 게시하기";
+    }
+
+    function renderStudentFeeds(subjectName) {
+        const studentFeedContainer = document.getElementById('studentFeedContainer');
+        let allFeeds = JSON.parse(localStorage.getItem('edu_feeds_v4')) || [];
+        let filteredFeeds = allFeeds.filter(feed => feed.subject === subjectName);
+        
+        renderQuickNoticeSidePanel(filteredFeeds, 'studentQuickNoticeList', 'studentQuickGeneralList', 'st');
+
+        if (filteredFeeds.length === 0) {
+            studentFeedContainer.innerHTML = `<p class="no-data">현재 [${subjectName}] 과목에 등록된 교육 안내 정보가 없습니다.</p>`;
+            return;
+        }
+        
+        filteredFeeds.sort((a, b) => {
+            if (a.isNotice && !b.isNotice) return -1;
+            if (!a.isNotice && b.isNotice) return 1;
+            return b.id - a.id;
+        });
+
+        studentFeedContainer.innerHTML = filteredFeeds.map(feed => {
+            const realTimeName = resolveAuthorName(feed);
+            const imagesList = feed.images ? feed.images : (feed.image ? [feed.image] : []);
+            const noticeTagHtml = feed.isNotice ? `<span class="feed-tag notice-tag">📌 중요 공지</span>` : '';
+            const bodyContentHtml = makeExpandableContent(feed.content, feed.id, 'st');
+            const commentSectionHtml = generateCommentSectionHtml(feed, 'st'); 
+
+            let imagesContainerHtml = '';
+            if (imagesList.length > 0) {
+                imagesContainerHtml = `
+                    <div class="feed-images-container">
+                        ${imagesList.map(imgData => `
+                            <div class="feed-img-wrapper">
+                                <img src="${imgData}" class="feed-attached-img" alt="교사 첨부 자료">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            return `
+                <div id="st_card_${feed.id}" class="feed-card" style="${feed.isNotice ? 'border: 2px solid #90A955; background-color: #ECF39E;' : ''}">
+                    <div class="feed-main-header">
+                        <div class="feed-info-left">
+                            <div class="feed-badge-row">
+                                ${noticeTagHtml}
+                                <span class="feed-tag" style="background-color: #f0f4f0; color: #31572C;">${feed.subject}</span>
+                                <span class="feed-author">${escapeHtml(realTimeName)} 선생님</span>
+                            </div>
+                        </div>
+                        <div class="feed-meta-right">
+                            <span class="feed-date">📅 ${feed.date}</span>
+                        </div>
+                    </div>
+                    <div class="feed-title">${escapeHtml(feed.title)}</div>
+                    ${bodyContentHtml}
+                    ${imagesContainerHtml}
+                    ${commentSectionHtml}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function logout() {
+        exitEditMode();
+        clearAllSelectedImages();
+        document.getElementById('infoIsNotice').checked = false;
+        currentSessionUser = null;
+        commentImagesBuffer = {}; 
+        
+        localStorage.removeItem('current_session_user_v4');
+        localStorage.removeItem('current_view_state_v4');
+
+        document.getElementById('loginIdentifier').value = '';
+        document.getElementById('loginPw').value = '';
+        navigateTo(loginPage);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+</script>
+</html>
